@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from configparser import ConfigParser
 
 import spotipy
@@ -95,6 +96,12 @@ def add_tracks_to_playlist(playlist_id, tracks):
     existing_tracks = [x['track']['id'] for x in data['items']]
 
     new_tracks = [x for x in tracks if x not in set(existing_tracks)]
+
+    old_tracks = [x for x in existing_tracks if x not in tracks]
+
+    print(f"Deleting {len(old_tracks)} tracks\n")
+    for x in old_tracks:
+        spotify.playlist_remove_all_occurrences_of_items(playlist_id, [x])
 
     print(f"Adding {len(new_tracks)} tracks\n")
     for x in new_tracks:
