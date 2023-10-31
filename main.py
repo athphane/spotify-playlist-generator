@@ -3,6 +3,7 @@ import os
 import sys
 from configparser import ConfigParser
 
+import requests
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -12,6 +13,7 @@ config.read('config.ini')
 spotify_client_id = config.get('spotify', 'client_id')
 spotify_client_secret = config.get('spotify', 'client_secret')
 spotify_redirect_uri = config.get('spotify', 'redirect_uri')
+ntfy_endpoint = config.get('ntfy', 'url')
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyOAuth(
     scope='user-library-read playlist-modify-public',
@@ -141,6 +143,7 @@ def create_or_update_playlist(year_month, month_playlist_id, me, title, tracks, 
     add_tracks_to_playlist(month_playlist_id, tracks)
 
 
+
 def main():
     tracks_by_month = group_tracks_by_month()
     me = spotify.me()
@@ -160,6 +163,14 @@ def main():
             tracks_by_month[x],
             description=f"Songs liked from {month}, {year}"
         )
+
+        tracks_count = len(tracks_by_month[x])
+        requests.post(ntfy_endpoint,
+                      data=f"Added {tracks_count} songs to {title}",
+                      headers={
+                          "Title": f"Playlist created for {x}",
+                          "Tags": "tada"
+                      })
 
 
 if __name__ == '__main__':
