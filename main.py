@@ -112,6 +112,8 @@ def add_tracks_to_playlist(playlist_id, tracks):
         else:
             spotify.playlist_add_items(playlist_id, [x], position=0)
 
+    return len(new_tracks)
+
 
 def check_if_playlist_already_create(year_month):
     with open('playlists.json', 'r') as f:
@@ -140,8 +142,15 @@ def create_or_update_playlist(year_month, month_playlist_id, me, title, tracks, 
 
         save_month_playlist_id(year_month, month_playlist_id)
 
-    add_tracks_to_playlist(month_playlist_id, tracks)
+    new_tracks_count = add_tracks_to_playlist(month_playlist_id, tracks)
 
+    if new_tracks_count > 0:
+        requests.post(ntfy_endpoint,
+                      data=f"Added {new_tracks_count} songs to {title}",
+                      headers={
+                          "Title": f"Playlist updated for {title}",
+                          "Tags": "tada"
+                      })
 
 
 def main():
@@ -163,14 +172,6 @@ def main():
             tracks_by_month[x],
             description=f"Songs liked from {month}, {year}"
         )
-
-        tracks_count = len(tracks_by_month[x])
-        requests.post(ntfy_endpoint,
-                      data=f"Added {tracks_count} songs to {title}",
-                      headers={
-                          "Title": f"Playlist created for {x}",
-                          "Tags": "tada"
-                      })
 
 
 if __name__ == '__main__':
