@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from configparser import ConfigParser
+import base64
 
 import requests
 import spotipy
@@ -14,6 +15,8 @@ spotify_client_id = config.get('spotify', 'client_id')
 spotify_client_secret = config.get('spotify', 'client_secret')
 spotify_redirect_uri = config.get('spotify', 'redirect_uri')
 ntfy_endpoint = config.get('ntfy', 'url')
+ntfy_user = config.get('ntfy', 'user')
+ntfy_pass = config.get('ntfy', 'pass')
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyOAuth(
     scope='user-library-read playlist-modify-public',
@@ -145,11 +148,16 @@ def create_or_update_playlist(year_month, month_playlist_id, me, title, tracks, 
     new_tracks_count = add_tracks_to_playlist(month_playlist_id, tracks)
 
     if new_tracks_count > 0:
+        # base 64 encode the username and password
+        auth_string = f"{ntfy_user}:{ntfy_pass}"
+        auth_string = base64.b64encode(auth_string)
+
         requests.post(ntfy_endpoint,
                       data=f"Added {new_tracks_count} songs to {title}",
                       headers={
                           "Title": f"Playlist updated for {title}",
-                          "Tags": "tada"
+                          "Tags": "tada",
+                          "Authorization": f"Basic {auth_string}"
                       })
 
 
