@@ -1,10 +1,13 @@
+import argparse
 import json
 import os
+import sys
 from configparser import ConfigParser
 
 import requests
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+
+from spotify_auth import RecoveringSpotifyOAuth, SpotifyAuthorizationRequired
 
 config = ConfigParser()
 config.read('config.ini')
@@ -15,19 +18,13 @@ spotify_redirect_uri = config.get('spotify', 'redirect_uri')
 ntfy_endpoint = config.get('ntfy', 'url')
 ntfy_auth = config.get('ntfy', 'auth')
 
-spotify = spotipy.Spotify(client_credentials_manager=SpotifyOAuth(
+spotify_oauth = RecoveringSpotifyOAuth(
     scope='user-library-read playlist-modify-public',
     client_id=spotify_client_id,
     client_secret=spotify_client_secret,
-    redirect_uri=spotify_redirect_uri)
+    redirect_uri=spotify_redirect_uri
 )
-
-# Create playlists json file if it does not exist.
-if 'playlists.json' not in os.listdir():
-    print("hits")
-    f = open('playlists.json', 'w')
-    f.write(json.dumps({'first_run': 'yes'}))
-    f.close()
+spotify = spotipy.Spotify(auth_manager=spotify_oauth)
 
 # Month map
 month_map = {'01': 'January',
@@ -155,6 +152,22 @@ def create_or_update_playlist(year_month, month_playlist_id, me, title, tracks, 
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Create playlists from liked songs.')
+    parser.add_argument('--reauthorize', action='store_true',
+                        help='Sign in again and save new tokens without updating playlists.')
+    args = parser.parse_args()
+    if args.reauthorize:
+        # Printing a URL also works when the job runs on a remote machine.
+        code = spotify_oauth.get_auth_response(open_browser=False)
+        spotify_oauth.get_access_token(code=code, as_dict=False, check_cache=False)
+        print('Spotify authorization saved. You can now run main.py normally.')
+        return
+
+    # Keep playlist IDs when signing in again to avoid duplicate playlists.
+    if not os.path.exists('playlists.json'):
+        with open('playlists.json', 'w') as f:
+            json.dump({'first_run': 'yes'}, f)
+
     tracks_by_month = group_tracks_by_month()
     me = spotify.me()
     for x in tracks_by_month.__reversed__():
@@ -176,4 +189,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except SpotifyAuthorizationRequired as error:
+        sys.exit(str(error))

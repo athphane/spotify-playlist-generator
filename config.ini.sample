@@ -1,7 +1,7 @@
 [spotify]
 client_id=
 client_secret=
-redirect_uri=http://localhost:8888/callbacks
+redirect_uri=http://127.0.0.1:8888/callback
 
 [ntfy]
 url=https://ntfy.sh/spotify-playlist-generator
