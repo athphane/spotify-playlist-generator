@@ -1,0 +1,6 @@
+# Allow only application sources and dependencies into the build context.
+*
+!Dockerfile
+!requirements.txt
+!main.py
+!spotify_auth.py

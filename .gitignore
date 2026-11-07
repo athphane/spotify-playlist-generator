@@ -6,3 +6,7 @@ songs/
 config.ini
 .cache*
 playlists.json
+data/
+playlist.log*
+.playlist.lock
+.env

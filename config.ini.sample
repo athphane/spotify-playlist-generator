@@ -5,3 +5,4 @@ redirect_uri=http://127.0.0.1:8888/callback
 
 [ntfy]
 url=https://ntfy.sh/spotify-playlist-generator
+auth=

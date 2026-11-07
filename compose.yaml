@@ -1,0 +1,20 @@
+services:
+  playlist:
+    build: .
+    image: athphane/spotify-playlist-generator:local
+    pull_policy: never
+    restart: "no"
+    init: true
+    user: "${PUID:-1000}:${PGID:-1000}"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config.ini
+        target: /data/config.ini
+        read_only: true
+        bind:
+          create_host_path: false

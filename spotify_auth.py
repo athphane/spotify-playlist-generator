@@ -27,6 +27,8 @@ class RecoveringSpotifyOAuth(SpotifyOAuth):
             raise SpotifyAuthorizationRequired(
                 'Spotify sign-in requires an interactive terminal. '
                 'From the project directory, run '
-                '`venv/bin/python main.py --reauthorize`, then rerun the job.'
+                '`venv/bin/python main.py --reauthorize` or, for Docker, '
+                '`docker compose run --rm playlist --reauthorize`, '
+                'then rerun the job.'
             )
         return super().get_auth_response(open_browser=open_browser)
